@@ -18,7 +18,7 @@ export function App() {
   const [supportOpen, setSupportOpen] = useState(false);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem(SESSION_KEY);
+    const saved = localStorage.getItem(SESSION_KEY);
     if (saved) {
       setSessionToken(saved);
       setStep('gift');
@@ -32,7 +32,7 @@ export function App() {
   };
 
   const onAuthenticated = (token: string) => {
-    sessionStorage.setItem(SESSION_KEY, token);
+    localStorage.setItem(SESSION_KEY, token);
     setSessionToken(token);
     setAuthId(null);
     setStep('gift');
@@ -49,7 +49,7 @@ export function App() {
   };
 
   const onLogout = () => {
-    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY);
     setSessionToken(null);
     restartAuth();
   };
