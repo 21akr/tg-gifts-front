@@ -46,9 +46,31 @@ async function loadTgs(url: string): Promise<unknown> {
     );
     const decompressed = ungzip(new Uint8Array(buffer));
     const text = new TextDecoder().decode(decompressed);
-    const json = JSON.parse(text);
+    const json = JSON.parse(text) as Record<string, unknown>;
+
+    // Validate it looks like a Lottie animation. Some TGS files in the wild
+    // contain Telegram-specific payloads (palette swaps, sticker bundles) that
+    // lottie-web silently fails to render, leaving an empty <svg>.
+    const looksLikeLottie =
+      json &&
+      typeof json === 'object' &&
+      typeof json.v === 'string' &&
+      Array.isArray(json.layers) &&
+      json.layers.length > 0;
+
+    if (!looksLikeLottie) {
+      const keys = Object.keys(json ?? {}).slice(0, 8).join(',');
+      throw new Error(
+        `not a renderable Lottie animation (keys: [${keys}], len=${text.length})`,
+      );
+    }
+
     cache.set(url, json);
-    log('LOTTIE', `decoded + parsed JSON (${text.length} chars)`, url);
+    log(
+      'LOTTIE',
+      `decoded Lottie v${String(json.v)}, ${(json.layers as unknown[]).length} layers, ${text.length} chars`,
+      url,
+    );
     return json;
   })().finally(() => {
     inflight.delete(url);
