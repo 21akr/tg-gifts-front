@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, ApiError, CatalogGift } from '../api';
 import { GiftCard } from './GiftCard';
+import { err, log } from '../lib/log';
 
 interface Props {
   sessionToken: string;
@@ -14,19 +15,26 @@ export function GiftPicker({ sessionToken, selectedId, onSelect }: Props) {
 
   useEffect(() => {
     let cancelled = false;
+    log('CATALOG', 'mount → fetching catalog');
+    const t0 = performance.now();
     api
       .listGifts(sessionToken)
       .then((data) => {
+        const dt = Math.round(performance.now() - t0);
+        log(
+          'CATALOG',
+          `listGifts OK in ${dt}ms, ${data.gifts.length} gifts; cancelled=${cancelled}`,
+        );
         if (!cancelled) setGifts(data.gifts);
       })
-      .catch((err) => {
+      .catch((e) => {
+        err('CATALOG', 'listGifts failed:', e);
         if (!cancelled) {
-          setError(
-            err instanceof ApiError ? err.message : 'Failed to load gifts',
-          );
+          setError(e instanceof ApiError ? e.message : 'Failed to load gifts');
         }
       });
     return () => {
+      log('CATALOG', 'unmount (cancelled=true)');
       cancelled = true;
     };
   }, [sessionToken]);

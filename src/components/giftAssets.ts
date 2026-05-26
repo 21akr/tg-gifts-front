@@ -2,6 +2,8 @@
 // {giftId -> assetUrl} map. Drop a file named `{giftId}.tgs` and it gets
 // picked up at build time. No code change needed.
 
+import { log } from '../lib/log';
+
 const tgsModules = import.meta.glob('../assets/gifts/*.tgs', {
   eager: true,
   query: '?url',
@@ -18,6 +20,8 @@ export const tgsByGiftId: Record<string, string> = (() => {
   }
   return map;
 })();
+
+log('ASSETS', 'discovered TGS files:', Object.keys(tgsByGiftId));
 
 export function hasTgsFor(giftId: string): boolean {
   return giftId in tgsByGiftId;

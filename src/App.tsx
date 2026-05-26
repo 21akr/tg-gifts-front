@@ -5,6 +5,7 @@ import { PhoneScreen } from './screens/Phone';
 import { CodeScreen } from './screens/Code';
 import { PasswordScreen } from './screens/Password';
 import { GiftScreen } from './screens/Gift';
+import { log } from './lib/log';
 
 type Step = 'phone' | 'code' | 'password' | 'gift';
 
@@ -19,11 +20,16 @@ export function App() {
 
   useEffect(() => {
     const saved = localStorage.getItem(SESSION_KEY);
+    log('APP', 'mount → localStorage token present?', !!saved);
     if (saved) {
       setSessionToken(saved);
       setStep('gift');
     }
   }, []);
+
+  useEffect(() => {
+    log('APP', 'step =', step, 'hasToken =', !!sessionToken);
+  }, [step, sessionToken]);
 
   const onCodeSent = (id: string, phone: string) => {
     setAuthId(id);

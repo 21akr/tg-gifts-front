@@ -1,7 +1,8 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { api, ApiError } from '../api';
 import { GiftPicker } from '../components/GiftPicker';
 import { FeaturedPicker } from '../components/FeaturedPicker';
+import { log } from '../lib/log';
 
 interface Props {
   sessionToken: string;
@@ -21,6 +22,15 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    log('GIFT-SCREEN', 'mount with token', sessionToken.slice(0, 8) + '...');
+    return () => log('GIFT-SCREEN', 'unmount');
+  }, [sessionToken]);
+
+  useEffect(() => {
+    log('GIFT-SCREEN', 'mode =', mode, 'selectedGiftId =', selectedGiftId);
+  }, [mode, selectedGiftId]);
 
   const giftId = mode === 'manual' ? manualGiftId.trim() : selectedGiftId;
 
@@ -61,6 +71,7 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
   };
 
   const switchMode = (next: Mode) => {
+    log('GIFT-SCREEN', 'switchMode →', next);
     setMode(next);
     setSelectedGiftId(null);
   };

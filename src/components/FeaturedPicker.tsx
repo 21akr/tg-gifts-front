@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, ApiError, CatalogGift } from '../api';
 import { GiftCard } from './GiftCard';
+import { err, log } from '../lib/log';
 
 const FEATURED_IDS: string[] = [
   '5922558454332916696',
@@ -31,21 +32,35 @@ export function FeaturedPicker({ sessionToken, selectedId, onSelect }: Props) {
 
   useEffect(() => {
     let cancelled = false;
+    log('FEATURED', 'mount → fetching catalog');
+    const t0 = performance.now();
     api
       .listGifts(sessionToken)
       .then((data) => {
+        const dt = Math.round(performance.now() - t0);
+        log(
+          'FEATURED',
+          `listGifts OK in ${dt}ms, ${data.gifts.length} gifts; cancelled=${cancelled}`,
+        );
         if (cancelled) return;
         const map = new Map(data.gifts.map((g) => [g.id, g] as const));
         setCatalog(map);
+        log(
+          'FEATURED',
+          'catalog map built, matched featured:',
+          FEATURED_IDS.filter((id) => map.has(id)).length,
+          '/',
+          FEATURED_IDS.length,
+        );
       })
-      .catch((err) => {
+      .catch((e) => {
+        err('FEATURED', 'listGifts failed:', e);
         if (!cancelled) {
-          setError(
-            err instanceof ApiError ? err.message : 'Failed to load gifts',
-          );
+          setError(e instanceof ApiError ? e.message : 'Failed to load gifts');
         }
       });
     return () => {
+      log('FEATURED', 'unmount (cancelled=true)');
       cancelled = true;
     };
   }, [sessionToken]);

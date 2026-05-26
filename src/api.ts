@@ -1,4 +1,7 @@
+import { err, log } from './lib/log';
+
 const BASE = import.meta.env.VITE_API_URL ?? '/api';
+log('API', 'base URL =', BASE);
 
 class ApiError extends Error {
   constructor(
@@ -13,13 +16,24 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  });
+  const method = options.method ?? 'GET';
+  log('API', `→ ${method} ${path}`);
+  const t0 = performance.now();
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+    });
+  } catch (netErr) {
+    err('API', `✗ network error ${method} ${path}:`, netErr);
+    throw netErr;
+  }
+  const dt = Math.round(performance.now() - t0);
+  log('API', `← ${res.status} ${method} ${path} (${dt}ms)`);
 
   if (res.status === 204) {
     return undefined as T;
@@ -42,6 +56,7 @@ async function request<T>(
         : null) ||
       (typeof body === 'string' ? body : null) ||
       `Request failed (${res.status})`;
+    err('API', `error body for ${path}:`, message);
     throw new ApiError(res.status, message);
   }
 
