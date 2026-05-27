@@ -32,6 +32,8 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
     log('GIFT-SCREEN', 'mode =', mode, 'selectedGiftId =', selectedGiftId);
   }, [mode, selectedGiftId]);
 
+  const giftId = mode === 'manual' ? manualGiftId.trim() : selectedGiftId;
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
