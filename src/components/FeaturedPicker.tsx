@@ -1,18 +1,72 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, ApiError, CatalogGift } from '../api';
 import { GiftCard } from './GiftCard';
+import { StarIcon } from './StarIcon';
 import { err, log } from '../lib/log';
 
-const FEATURED_IDS: string[] = [
-  '5922558454332916696',
-  '5956217000635139069',
-  '5801108895304779062',
-  '5800655655995968830',
-  '5866352046986232958',
-  '5893356958802511476',
-  '5935895822435615975',
-  '5969796561943660080',
-  '6026193266406327981',
+interface FeaturedDef {
+  id: string;
+  releasedAt: string;
+  holiday: string;
+  emoji?: string;
+}
+
+// Curated list. Order here = default display order.
+const FEATURED: FeaturedDef[] = [
+  {
+    id: '6026193266406327981',
+    releasedAt: '2026-05-01',
+    holiday: "International Workers' Day",
+    emoji: '🌹',
+  },
+  {
+    id: '5969796561943660080',
+    releasedAt: '2026-04-12',
+    holiday: 'Easter',
+    emoji: '🐣',
+  },
+  {
+    id: '5935895822435615975',
+    releasedAt: '2026-04-01',
+    holiday: 'April Fools',
+    emoji: '🤡',
+  },
+  {
+    id: '5893356958802511476',
+    releasedAt: '2026-03-17',
+    holiday: "St. Patrick's Day",
+    emoji: '🍀',
+  },
+  {
+    id: '5866352046986232958',
+    releasedAt: '2026-03-08',
+    holiday: "International Women's Day",
+    emoji: '🌷',
+  },
+  {
+    id: '5800655655995968830',
+    releasedAt: '2026-02-14',
+    holiday: "Valentine's Day",
+    emoji: '💝',
+  },
+  {
+    id: '5801108895304779062',
+    releasedAt: '2026-02-14',
+    holiday: "Valentine's Day",
+    emoji: '💌',
+  },
+  {
+    id: '5956217000635139069',
+    releasedAt: '2025-12-31',
+    holiday: 'New Year',
+    emoji: '🎆',
+  },
+  {
+    id: '5922558454332916696',
+    releasedAt: '2025-12-31',
+    holiday: 'New Year',
+    emoji: '✨',
+  },
 ];
 
 const FEATURED_PRICE = 50;
@@ -48,9 +102,9 @@ export function FeaturedPicker({ sessionToken, selectedId, onSelect }: Props) {
         log(
           'FEATURED',
           'catalog map built, matched featured:',
-          FEATURED_IDS.filter((id) => map.has(id)).length,
+          FEATURED.filter((f) => map.has(f.id)).length,
           '/',
-          FEATURED_IDS.length,
+          FEATURED.length,
         );
       })
       .catch((e) => {
@@ -66,16 +120,21 @@ export function FeaturedPicker({ sessionToken, selectedId, onSelect }: Props) {
   }, [sessionToken]);
 
   const items = useMemo<CatalogGift[]>(() => {
-    const ordered = sort === 'asc' ? FEATURED_IDS : [...FEATURED_IDS].reverse();
-    return ordered.map((id) => {
-      const fromCatalog = catalog?.get(id);
+    const ordered = sort === 'asc' ? FEATURED : [...FEATURED].reverse();
+    return ordered.map((f) => {
+      const fromCatalog = catalog?.get(f.id);
       return {
-        id,
+        id: f.id,
         stars: FEATURED_PRICE,
         limited: false,
         soldOut: false,
         auction: false,
         thumbnail: fromCatalog?.thumbnail,
+        featured: {
+          holiday: f.holiday,
+          releasedAt: f.releasedAt,
+          emoji: f.emoji,
+        },
       };
     });
   }, [catalog, sort]);
@@ -87,8 +146,9 @@ export function FeaturedPicker({ sessionToken, selectedId, onSelect }: Props) {
   return (
     <>
       <div className="featured-toolbar">
-        <span className="featured-count">
-          {FEATURED_IDS.length} curated gifts
+        <span className="price-pill" title={`Each gift costs ${FEATURED_PRICE} stars`}>
+          <StarIcon size={11} />
+          {FEATURED_PRICE}
         </span>
         <div className="sort-toggle" role="group" aria-label="Sort order">
           <button

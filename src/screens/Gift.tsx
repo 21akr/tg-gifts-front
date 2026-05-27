@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { api, ApiError } from '../api';
 import { GiftPicker } from '../components/GiftPicker';
 import { FeaturedPicker } from '../components/FeaturedPicker';
+import { RecipientPreview } from '../components/RecipientPreview';
 import { log } from '../lib/log';
 
 interface Props {
@@ -9,13 +10,12 @@ interface Props {
   onLogout: () => void;
 }
 
-type Mode = 'featured' | 'browse' | 'manual';
+type Mode = 'featured' | 'browse';
 
 export function GiftScreen({ sessionToken, onLogout }: Props) {
   const [mode, setMode] = useState<Mode>('featured');
   const [targetUser, setTargetUser] = useState('');
   const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
-  const [manualGiftId, setManualGiftId] = useState('');
   const [comment, setComment] = useState('');
   const [anonymous, setAnonymous] = useState(false);
 
@@ -31,8 +31,6 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
   useEffect(() => {
     log('GIFT-SCREEN', 'mode =', mode, 'selectedGiftId =', selectedGiftId);
   }, [mode, selectedGiftId]);
-
-  const giftId = mode === 'manual' ? manualGiftId.trim() : selectedGiftId;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -51,7 +49,6 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
       setSuccess(result.message);
       setTargetUser('');
       setSelectedGiftId(null);
-      setManualGiftId('');
       setComment('');
       setAnonymous(false);
     } catch (err) {
@@ -103,6 +100,7 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
           <label className="field-label" htmlFor="recipient">
             Recipient
           </label>
+          <RecipientPreview sessionToken={sessionToken} query={targetUser} />
           <input
             id="recipient"
             className="input"
@@ -136,15 +134,6 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
             >
               Catalog
             </button>
-            <button
-              type="button"
-              className={`segmented-option ${mode === 'manual' ? 'active' : ''}`}
-              onClick={() => switchMode('manual')}
-              role="tab"
-              aria-selected={mode === 'manual'}
-            >
-              By ID
-            </button>
           </div>
 
           {mode === 'featured' && (
@@ -163,25 +152,7 @@ export function GiftScreen({ sessionToken, onLogout }: Props) {
             />
           )}
 
-          {mode === 'manual' && (
-            <>
-              <input
-                id="giftId"
-                className="input"
-                type="text"
-                inputMode="numeric"
-                placeholder="e.g. 5170145012310081615"
-                value={manualGiftId}
-                onChange={(e) =>
-                  setManualGiftId(e.target.value.replace(/\D/g, ''))
-                }
-                disabled={loading}
-              />
-              <span className="field-hint">
-                Numeric ID of a hidden or specific gift
-              </span>
-            </>
-          )}
+
         </div>
 
         <div className="field">

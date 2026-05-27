@@ -72,6 +72,19 @@ export interface CatalogGift {
   availabilityRemains?: number;
   availabilityTotal?: number;
   thumbnail?: string;
+  featured?: {
+    holiday: string;
+    releasedAt: string;
+    emoji?: string;
+  };
+}
+
+export interface ResolvedUser {
+  id: string;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  photoUrl?: string;
 }
 
 export const api = {
@@ -113,6 +126,13 @@ export const api = {
     request<{ gifts: CatalogGift[] }>('/gifts/list', {
       method: 'GET',
       headers: { Authorization: `Bearer ${sessionToken}` },
+    }),
+
+  resolveUser: (sessionToken: string, query: string, signal?: AbortSignal) =>
+    request<ResolvedUser>(`/users/resolve?q=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${sessionToken}` },
+      signal,
     }),
 
   buyGift: (
